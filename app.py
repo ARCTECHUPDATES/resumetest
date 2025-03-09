@@ -88,10 +88,13 @@ if job_desc_file and resume_files:
     # Calculate similarity scores
     scores = calculate_similarity(job_desc, resumes)
 
+    # Convert similarity scores to percentage
+    scores_percentage = [round(score * 100, 2) for score in scores]
+
     # Sort resumes by similarity score
-    ranked_resumes = sorted(zip(resume_names, scores), key=lambda x: x[1], reverse=True)
+    ranked_resumes = sorted(zip(resume_names, scores_percentage), key=lambda x: x[1], reverse=True)
 
     # Display results
-    df = pd.DataFrame(ranked_resumes, columns=["Resume", "Similarity Score"])
+    df = pd.DataFrame(ranked_resumes, columns=["Resume", "Candidate Score (%)"])
     st.subheader("📊 Ranked Resumes")
     st.dataframe(df)
