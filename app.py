@@ -2,11 +2,16 @@ import streamlit as st
 import os
 import spacy
 import pandas as pd
+import subprocess
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
-# Load spaCy model
-nlp = spacy.load("en_core_web_sm")
+# Ensure spaCy model is installed
+try:
+    nlp = spacy.load("en_core_web_sm")
+except OSError:
+    subprocess.run(["python", "-m", "spacy", "download", "en_core_web_sm"], check=True)
+    nlp = spacy.load("en_core_web_sm")
 
 def preprocess_text(text):
     """ Preprocess text using spaCy (tokenization, lemmatization, stopwords removal) """
@@ -19,7 +24,6 @@ def calculate_similarity(job_desc, resumes):
     vectorizer = TfidfVectorizer()
     documents = [job_desc] + resumes
     tfidf_matrix = vectorizer.fit_transform(documents)
-    
     similarity_scores = cosine_similarity(tfidf_matrix[0], tfidf_matrix[1:])[0]
     return similarity_scores
 
@@ -57,4 +61,3 @@ if job_desc_file and resume_files:
     df = pd.DataFrame(ranked_resumes, columns=["Resume", "Similarity Score"])
     st.subheader("📊 Ranked Resumes")
     st.dataframe(df)
-
