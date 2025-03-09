@@ -10,6 +10,7 @@ import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 from PIL import Image
+from docx import Document  # For extracting text from .docx files
 
 # Ensure spaCy model is installed
 try:
@@ -33,11 +34,20 @@ def extract_text_from_pdf(pdf_file):
                 text += pytesseract.image_to_string(image.original) + "\n"
     return text.strip()
 
-# Function to extract text from images using OCR
+# Function to extract text from images (JPG, PNG, JPEG) using OCR
 def extract_text_from_image(image_file):
     """ Extract text from an image using OCR """
     image = Image.open(image_file).convert("RGB")
     text = pytesseract.image_to_string(image)
+    return text.strip()
+
+# Function to extract text from Word documents (.docx)
+def extract_text_from_docx(docx_file):
+    """ Extract text from a Word document (.docx) """
+    doc = Document(docx_file)
+    text = ""
+    for para in doc.paragraphs:
+        text += para.text + "\n"
     return text.strip()
 
 # Text preprocessing using spaCy (lemmatization & stopword removal)
@@ -63,9 +73,10 @@ st.title("🚀 AI-Powered Resume Screening & Ranking System")
 st.header("📜 Upload Job Description")
 job_desc_file = st.file_uploader("Choose a Job Description file (.txt)", type=["txt"])
 
-# Upload Resumes (Supports both TXT and PDF)
+# Upload Resumes (Supports TXT, PDF, JPG, PNG, JPEG, DOCX)
 st.header("📂 Upload Resumes")
-resume_files = st.file_uploader("Upload Multiple Resumes (.txt, .pdf)", type=["txt", "pdf"], accept_multiple_files=True)
+resume_files = st.file_uploader("Upload Multiple Resumes (.txt, .pdf, .jpg, .png, .jpeg, .docx)", 
+                                type=["txt", "pdf", "jpg", "jpeg", "png", "docx"], accept_multiple_files=True)
 
 if job_desc_file and resume_files:
     # Read job description
@@ -79,6 +90,10 @@ if job_desc_file and resume_files:
     for resume_file in resume_files:
         if resume_file.type == "application/pdf":
             resume_text = extract_text_from_pdf(resume_file)  # Extract text from PDF
+        elif resume_file.type in ["image/jpeg", "image/png", "image/jpg"]:
+            resume_text = extract_text_from_image(resume_file)  # Extract text from images (JPG, PNG, JPEG)
+        elif resume_file.type == "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
+            resume_text = extract_text_from_docx(resume_file)  # Extract text from Word docs (.docx)
         else:
             resume_text = resume_file.read().decode("utf-8")  # Extract text from TXT
 
