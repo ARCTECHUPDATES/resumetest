@@ -48,9 +48,7 @@ def extract_text_from_image(image_file):
 def extract_text_from_docx(docx_file):
     """ Extract text from a Word document (.docx) """
     doc = Document(docx_file)
-    text = ""
-    for para in doc.paragraphs:
-        text += para.text + "\n"
+    text = "\n".join([para.text for para in doc.paragraphs])
     return text.strip()
 
 # Text preprocessing using spaCy (lemmatization & stopword removal)
@@ -72,34 +70,48 @@ def calculate_similarity(job_desc, resumes):
 # Streamlit UI
 st.title("🚀 AI-Powered Resume Screening & Ranking System")
 
-# Upload Job Description
+# Upload Job Description (Supports TXT, PDF, DOCX, JPG, PNG)
 st.header("📜 Upload Job Description")
-job_desc_file = st.file_uploader("Choose a Job Description file (.txt)", type=["txt"])
+job_desc_file = st.file_uploader("Choose a Job Description file (.txt, .pdf, .docx, .jpg, .png, .jpeg)", 
+                                 type=["txt", "pdf", "docx", "jpg", "jpeg", "png"])
+
+job_desc = ""
+
+if job_desc_file:
+    ext = job_desc_file.name.split(".")[-1].lower()
+
+    if ext == "txt":
+        job_desc = job_desc_file.read().decode("utf-8")
+    elif ext == "pdf":
+        job_desc = extract_text_from_pdf(job_desc_file)
+    elif ext == "docx":
+        job_desc = extract_text_from_docx(job_desc_file)
+    elif ext in ["jpg", "jpeg", "png"]:
+        job_desc = extract_text_from_image(job_desc_file)
+
+    job_desc = preprocess_text(job_desc)  # Preprocessing for better matching
 
 # Upload Resumes (Supports TXT, PDF, JPG, PNG, JPEG, DOCX)
 st.header("📂 Upload Resumes")
 resume_files = st.file_uploader("Upload Multiple Resumes (.txt, .pdf, .jpg, .png, .jpeg, .docx)", 
                                 type=["txt", "pdf", "jpg", "jpeg", "png", "docx"], accept_multiple_files=True)
 
-if job_desc_file and resume_files:
-    # Read job description
-    job_desc = job_desc_file.read().decode("utf-8")
-    job_desc = preprocess_text(job_desc)
-
-    # Read and preprocess resumes
+if job_desc and resume_files:
     resumes = []
     resume_names = []
 
     for resume_file in resume_files:
-        if resume_file.type == "application/pdf":
-            resume_text = extract_text_from_pdf(resume_file)  # Extract text from PDF
-        elif resume_file.type in ["image/jpeg", "image/png", "image/jpg"]:
-            resume_text = extract_text_from_image(resume_file)  # Extract text from images (JPG, PNG, JPEG)
-        elif resume_file.type == "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
-            resume_text = extract_text_from_docx(resume_file)  # Extract text from Word docs (.docx)
-        else:
-            resume_text = resume_file.read().decode("utf-8")  # Extract text from TXT
+        ext = resume_file.name.split(".")[-1].lower()
 
+        if ext == "txt":
+            resume_text = resume_file.read().decode("utf-8")
+        elif ext == "pdf":
+            resume_text = extract_text_from_pdf(resume_file)
+        elif ext == "docx":
+            resume_text = extract_text_from_docx(resume_file)
+        elif ext in ["jpg", "jpeg", "png"]:
+            resume_text = extract_text_from_image(resume_file)
+        
         resumes.append(preprocess_text(resume_text))
         resume_names.append(resume_file.name)
 
