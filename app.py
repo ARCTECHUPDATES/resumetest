@@ -5,8 +5,6 @@ import pandas as pd
 import subprocess
 import pdfplumber
 import pytesseract
-import cv2
-import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 from PIL import Image
@@ -23,12 +21,12 @@ except OSError:
     nlp = spacy.load("en_core_web_sm")
 
 # Load external CSS file
-def local_css(file_name):
+def load_css(file_name):
     with open(file_name) as f:
         st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
-# Call function to load CSS
-local_css("styles.css")
+# Apply CSS
+load_css("styles.css")
 
 # Function to extract text from PDF (including OCR for scanned PDFs)
 def extract_text_from_pdf(pdf_file):
@@ -36,33 +34,25 @@ def extract_text_from_pdf(pdf_file):
     with pdfplumber.open(pdf_file) as pdf:
         for page in pdf.pages:
             extracted_text = page.extract_text()
-            if extracted_text:
-                text += extracted_text + "\n"
-            else:
-                image = page.to_image(resolution=300)
-                text += pytesseract.image_to_string(image.original) + "\n"
+            text += extracted_text + "\n" if extracted_text else pytesseract.image_to_string(page.to_image(resolution=300).original) + "\n"
     return text.strip()
 
 # Function to extract text from images (JPG, PNG, JPEG) using OCR
 def extract_text_from_image(image_file):
-    image = Image.open(image_file).convert("RGB")
-    return pytesseract.image_to_string(image).strip()
+    return pytesseract.image_to_string(Image.open(image_file).convert("RGB")).strip()
 
 # Function to extract text from Word documents (.docx)
 def extract_text_from_docx(docx_file):
-    doc = Document(docx_file)
-    return "\n".join([para.text for para in doc.paragraphs]).strip()
+    return "\n".join([para.text for para in Document(docx_file).paragraphs]).strip()
 
 # Text preprocessing using spaCy (lemmatization & stopword removal)
 def preprocess_text(text):
-    doc = nlp(text.lower())
-    return " ".join([token.lemma_ for token in doc if not token.is_stop and not token.is_punct])
+    return " ".join([token.lemma_ for token in nlp(text.lower()) if not token.is_stop and not token.is_punct])
 
 # Function to calculate similarity between job description and resumes
 def calculate_similarity(job_desc, resumes):
     vectorizer = TfidfVectorizer()
-    documents = [job_desc] + resumes
-    tfidf_matrix = vectorizer.fit_transform(documents)
+    tfidf_matrix = vectorizer.fit_transform([job_desc] + resumes)
     return cosine_similarity(tfidf_matrix[0], tfidf_matrix[1:])[0]
 
 # Streamlit UI
@@ -70,8 +60,7 @@ st.title("🚀 AI-Powered Resume Screening & Ranking System")
 
 # Job Description Input – Choose either Upload OR Paste
 st.header("📜 Job Description")
-jd_option = st.radio("How do you want to provide the Job Description?", 
-                     ("Paste Job Description", "Upload a File"))
+jd_option = st.radio("How do you want to provide the Job Description?", ("Paste Job Description", "Upload a File"))
 
 job_desc = ""
 
