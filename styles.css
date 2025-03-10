@@ -1,37 +1,24 @@
-/* Body Styling */
-body {
-    font-family: 'Arial', sans-serif;
-    background-color: #f5f7fa;
-}
-
-/* Title Styling */
+/* Streamlit Custom Styling */
 h1 {
-    color: #3E64FF;
+    font-size: 36px;
     text-align: center;
+    color: #FF4B4B;
 }
 
-/* Section Headers */
-h2 {
-    color: #3E64FF;
+.stTextArea, .stFileUploader {
+    border-radius: 10px;
+    border: 2px solid #FF4B4B;
 }
 
-/* Centering Radio Buttons */
-.stRadio {
-    display: flex;
-    justify-content: center;
-}
-
-/* Styled Button */
-.stButton > button {
-    background-color: #3E64FF;
+div.stButton button {
+    background-color: #FF4B4B;
     color: white;
-    font-size: 16px;
-    padding: 8px 16px;
-    border-radius: 5px;
+    font-weight: bold;
+    border-radius: 10px;
+    padding: 10px;
 }
 
-/* Styling for DataFrame */
 .stDataFrame {
-    border: 1px solid #ddd;
-    border-radius: 9px;
+    border-radius: 10px;
+    border: 2px solid #FF4B4B;
 }

@@ -20,7 +20,7 @@ except OSError:
     subprocess.run(["python", "-m", "spacy", "download", "en_core_web_sm"], check=True)
     nlp = spacy.load("en_core_web_sm")
 
-# Load external CSS file
+# Load external CSS
 def load_css(file_name):
     with open(file_name) as f:
         st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
@@ -56,21 +56,20 @@ def calculate_similarity(job_desc, resumes):
     return cosine_similarity(tfidf_matrix[0], tfidf_matrix[1:])[0]
 
 # Streamlit UI
-st.title("🚀 AI-Powered Resume Screening & Ranking System")
+st.markdown("<h1 style='text-align: center; color: #FF4B4B;'>🚀 AI-Powered Resume Screening & Ranking System</h1>", unsafe_allow_html=True)
 
-# Job Description Input – Choose either Upload OR Paste
-st.header("📜 Job Description")
-jd_option = st.radio("How do you want to provide the Job Description?", ("Paste Job Description", "Upload a File"))
+with st.container():
+    st.markdown("### 📜 Job Description")
+    jd_option = st.radio("How do you want to provide the Job Description?", ("Paste Job Description", "Upload a File"), horizontal=True)
 
 job_desc = ""
 
 if jd_option == "Paste Job Description":
-    job_desc = st.text_area("Paste Job Description Here")
+    job_desc = st.text_area("✍ Paste Job Description Here", height=150)
 
 elif jd_option == "Upload a File":
-    job_desc_file = st.file_uploader("Upload a Job Description file (.txt, .pdf, .docx, .jpg, .png, .jpeg)", 
+    job_desc_file = st.file_uploader("📂 Upload a Job Description file (.txt, .pdf, .docx, .jpg, .png, .jpeg)", 
                                      type=["txt", "pdf", "docx", "jpg", "jpeg", "png"])
-
     if job_desc_file:
         ext = job_desc_file.name.split(".")[-1].lower()
         if ext == "txt":
@@ -82,20 +81,23 @@ elif jd_option == "Upload a File":
         elif ext in ["jpg", "jpeg", "png"]:
             job_desc = extract_text_from_image(job_desc_file)
 
-# Preprocess Job Description for better matching
 if job_desc:
     job_desc = preprocess_text(job_desc)
 
-# Upload Resumes (Supports TXT, PDF, JPG, PNG, JPEG, DOCX)
-st.header("📂 Upload Resumes")
-resume_files = st.file_uploader("Upload Multiple Resumes (.txt, .pdf, .jpg, .png, .jpeg, .docx)", 
+st.markdown("---")
+
+st.markdown("### 📂 Upload Resumes")
+resume_files = st.file_uploader("📤 Upload Multiple Resumes (.txt, .pdf, .jpg, .png, .jpeg, .docx)", 
                                 type=["txt", "pdf", "jpg", "jpeg", "png", "docx"], accept_multiple_files=True)
 
 if job_desc and resume_files:
+    st.markdown("### 🔄 Processing Resumes...")
+    progress_bar = st.progress(0)
+
     resumes = []
     resume_names = []
 
-    for resume_file in resume_files:
+    for idx, resume_file in enumerate(resume_files):
         ext = resume_file.name.split(".")[-1].lower()
         if ext == "txt":
             resume_text = resume_file.read().decode("utf-8")
@@ -109,14 +111,15 @@ if job_desc and resume_files:
         resumes.append(preprocess_text(resume_text))
         resume_names.append(resume_file.name)
 
-    # Calculate similarity scores
+        progress_bar.progress((idx + 1) / len(resume_files))
+
     scores = calculate_similarity(job_desc, resumes)
     scores_percentage = [round(score * 100, 2) for score in scores]
 
-    # Sort resumes by similarity score
     ranked_resumes = sorted(zip(resume_names, scores_percentage), key=lambda x: x[1], reverse=True)
 
-    # Display results
     df = pd.DataFrame(ranked_resumes, columns=["Resume", "Candidate Score (%)"])
-    st.subheader("📊 Ranked Resumes")
+    df = df.style.set_properties(**{"text-align": "left"}).bar(subset=["Candidate Score (%)"], color="#FF4B4B")
+
+    st.markdown("### 📊 Ranked Resumes")
     st.dataframe(df)
