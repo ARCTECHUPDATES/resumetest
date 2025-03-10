@@ -22,6 +22,14 @@ except OSError:
     subprocess.run(["python", "-m", "spacy", "download", "en_core_web_sm"], check=True)
     nlp = spacy.load("en_core_web_sm")
 
+# Load external CSS file
+def local_css(file_name):
+    with open(file_name) as f:
+        st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+
+# Call function to load CSS
+local_css("styles.css")
+
 # Function to extract text from PDF (including OCR for scanned PDFs)
 def extract_text_from_pdf(pdf_file):
     text = ""
