@@ -12,6 +12,9 @@ from sklearn.metrics.pairwise import cosine_similarity
 from PIL import Image
 from docx import Document  # For extracting text from .docx files
 
+# Streamlit Cloud ke liye Tesseract ka path set kiya hai
+pytesseract.pytesseract.tesseract_cmd = "/usr/bin/tesseract"
+
 # Ensure spaCy model is installed
 try:
     nlp = spacy.load("en_core_web_sm")
