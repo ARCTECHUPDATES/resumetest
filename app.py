@@ -10,7 +10,7 @@ import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 from PIL import Image
-from docx import Document  # For extracting text from .docx files
+from docx import Document
 
 # Streamlit Cloud ke liye Tesseract ka path set kiya hai
 pytesseract.pytesseract.tesseract_cmd = "/usr/bin/tesseract"
@@ -24,7 +24,6 @@ except OSError:
 
 # Function to extract text from PDF (including OCR for scanned PDFs)
 def extract_text_from_pdf(pdf_file):
-    """ Extract text from a PDF file, including scanned PDFs using OCR """
     text = ""
     with pdfplumber.open(pdf_file) as pdf:
         for page in pdf.pages:
@@ -32,64 +31,63 @@ def extract_text_from_pdf(pdf_file):
             if extracted_text:
                 text += extracted_text + "\n"
             else:
-                # If text extraction fails, use OCR
                 image = page.to_image(resolution=300)
                 text += pytesseract.image_to_string(image.original) + "\n"
     return text.strip()
 
 # Function to extract text from images (JPG, PNG, JPEG) using OCR
 def extract_text_from_image(image_file):
-    """ Extract text from an image using OCR """
     image = Image.open(image_file).convert("RGB")
-    text = pytesseract.image_to_string(image)
-    return text.strip()
+    return pytesseract.image_to_string(image).strip()
 
 # Function to extract text from Word documents (.docx)
 def extract_text_from_docx(docx_file):
-    """ Extract text from a Word document (.docx) """
     doc = Document(docx_file)
-    text = "\n".join([para.text for para in doc.paragraphs])
-    return text.strip()
+    return "\n".join([para.text for para in doc.paragraphs]).strip()
 
 # Text preprocessing using spaCy (lemmatization & stopword removal)
 def preprocess_text(text):
-    """ Preprocess text using spaCy (tokenization, lemmatization, stopwords removal) """
     doc = nlp(text.lower())
-    tokens = [token.lemma_ for token in doc if not token.is_stop and not token.is_punct]
-    return " ".join(tokens)
+    return " ".join([token.lemma_ for token in doc if not token.is_stop and not token.is_punct])
 
 # Function to calculate similarity between job description and resumes
 def calculate_similarity(job_desc, resumes):
-    """ Calculate Cosine Similarity between Job Description and Resumes """
     vectorizer = TfidfVectorizer()
     documents = [job_desc] + resumes
     tfidf_matrix = vectorizer.fit_transform(documents)
-    similarity_scores = cosine_similarity(tfidf_matrix[0], tfidf_matrix[1:])[0]
-    return similarity_scores
+    return cosine_similarity(tfidf_matrix[0], tfidf_matrix[1:])[0]
 
 # Streamlit UI
 st.title("🚀 AI-Powered Resume Screening & Ranking System")
 
-# Upload Job Description (Supports TXT, PDF, DOCX, JPG, PNG)
-st.header("📜 Upload Job Description")
-job_desc_file = st.file_uploader("Choose a Job Description file (.txt, .pdf, .jpg, .png, .jpeg, .docx)", 
-                                 type=["txt", "pdf", "jpg", "jpeg", "png", "docx"])
+# Job Description Input – Choose either Upload OR Paste
+st.header("📜 Job Description")
+jd_option = st.radio("How do you want to provide the Job Description?", 
+                     ("Paste Job Description", "Upload a File"))
 
 job_desc = ""
 
-if job_desc_file:
-    ext = job_desc_file.name.split(".")[-1].lower()
+if jd_option == "Paste Job Description":
+    job_desc = st.text_area("Paste Job Description Here")
 
-    if ext == "txt":
-        job_desc = job_desc_file.read().decode("utf-8")
-    elif ext == "pdf":
-        job_desc = extract_text_from_pdf(job_desc_file)
-    elif ext == "docx":
-        job_desc = extract_text_from_docx(job_desc_file)
-    elif ext in ["jpg", "jpeg", "png"]:
-        job_desc = extract_text_from_image(job_desc_file)
+elif jd_option == "Upload a File":
+    job_desc_file = st.file_uploader("Upload a Job Description file (.txt, .pdf, .docx, .jpg, .png, .jpeg)", 
+                                     type=["txt", "pdf", "docx", "jpg", "jpeg", "png"])
 
-    job_desc = preprocess_text(job_desc)  # Preprocessing for better matching
+    if job_desc_file:
+        ext = job_desc_file.name.split(".")[-1].lower()
+        if ext == "txt":
+            job_desc = job_desc_file.read().decode("utf-8")
+        elif ext == "pdf":
+            job_desc = extract_text_from_pdf(job_desc_file)
+        elif ext == "docx":
+            job_desc = extract_text_from_docx(job_desc_file)
+        elif ext in ["jpg", "jpeg", "png"]:
+            job_desc = extract_text_from_image(job_desc_file)
+
+# Preprocess Job Description for better matching
+if job_desc:
+    job_desc = preprocess_text(job_desc)
 
 # Upload Resumes (Supports TXT, PDF, JPG, PNG, JPEG, DOCX)
 st.header("📂 Upload Resumes")
@@ -102,7 +100,6 @@ if job_desc and resume_files:
 
     for resume_file in resume_files:
         ext = resume_file.name.split(".")[-1].lower()
-
         if ext == "txt":
             resume_text = resume_file.read().decode("utf-8")
         elif ext == "pdf":
@@ -117,8 +114,6 @@ if job_desc and resume_files:
 
     # Calculate similarity scores
     scores = calculate_similarity(job_desc, resumes)
-
-    # Convert similarity scores to percentage
     scores_percentage = [round(score * 100, 2) for score in scores]
 
     # Sort resumes by similarity score
