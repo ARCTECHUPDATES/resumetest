@@ -11,3 +11,14 @@ pytesseract
 opencv-python-headless
 Pillow
 python-docx
+mpmath
+sympy
+safetensors
+pyyaml
+networkx
+fsspec
+filelock
+torch
+huggingface-hub
+tokenizers
+transformers
