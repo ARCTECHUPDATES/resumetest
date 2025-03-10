@@ -72,8 +72,8 @@ st.title("🚀 AI-Powered Resume Screening & Ranking System")
 
 # Upload Job Description (Supports TXT, PDF, DOCX, JPG, PNG)
 st.header("📜 Upload Job Description")
-job_desc_file = st.file_uploader("Choose a Job Description file (.txt, .pdf, .docx, .jpg, .png, .jpeg)", 
-                                 type=["txt", "pdf", "docx", "jpg", "jpeg", "png"])
+job_desc_file = st.file_uploader("Choose a Job Description file (.txt, .pdf, .jpg, .png, .jpeg, .docx)", 
+                                 type=["txt", "pdf", "jpg", "jpeg", "png", "docx"])
 
 job_desc = ""
 
