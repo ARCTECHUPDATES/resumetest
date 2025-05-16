@@ -1,6 +1,6 @@
 # 🚀 AI-Powered Resume Screening & Ranking System
 
-[![Streamlit App](https://img.shields.io/badge/Live%20Demo-Online-blue?style=for-the-badge)](https://ai-powered-resume-ranking.streamlit.app/)
+[![Streamlit App](https://img.shields.io/badge/Live%20Demo-Online-blue?style=for-the-badge)](https://resume-airankinglist.streamlit.app/)
 
 ## 📌 Overview
 
@@ -38,8 +38,3 @@ This project is an AI-driven resume ranking system that helps recruiters and hir
 4. **View Rankings**:
    - The AI system ranks the resumes based on job fit.
 
-## 📞 Contact
-
-- **Author**: Shubham Kumar  
-- **Email**: shubham.kumar123925@gmail.com
-- **LinkedIn**: https://www.linkedin.com/in/shubhamx599
